@@ -8,8 +8,9 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
-    command:
-      - cat
+    args:
+      - sleep
+      - "999999"
     tty: true
     volumeMounts:
     - name: docker-config
