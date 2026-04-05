@@ -16,6 +16,15 @@ spec:
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker
+
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command:
+    - sleep
+    args:
+    - "9999999"
+    tty: true
+
   volumes:
   - name: docker-config
     projected:
@@ -70,10 +79,12 @@ spec:
 
     stage('Deploy') {
       steps {
-        sh '''
-        kubectl set image deployment/backend backend=$DOCKERHUB/backend:$IMAGE_TAG
-        kubectl set image deployment/frontend frontend=$DOCKERHUB/frontend:$IMAGE_TAG
-        '''
+        container('kubectl') {
+          sh '''
+          kubectl set image deployment/backend backend=$DOCKERHUB/backend:$IMAGE_TAG
+          kubectl set image deployment/frontend frontend=$DOCKERHUB/frontend:$IMAGE_TAG
+          '''
+        }
       }
     }
   }
