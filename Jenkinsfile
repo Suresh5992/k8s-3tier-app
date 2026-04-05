@@ -8,12 +8,9 @@ spec:
   containers:
 
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
+    image: gcr.io/kaniko-project/executor:debug
     command:
-      - /bin/sh
-      - -c
-    args:
-    - sleep 999999
+      - cat
     tty: true
     volumeMounts:
     - name: docker-config
@@ -57,7 +54,7 @@ spec:
           sh '''
           /kaniko/executor \
             --dockerfile=backend/Dockerfile \
-            --context=$PWD \
+            --context=$PWD/backend \
             --destination=$DOCKERHUB/backend:$IMAGE_TAG \
             --skip-tls-verify
           '''
@@ -71,7 +68,7 @@ spec:
           sh '''
           /kaniko/executor \
             --dockerfile=frontend/Dockerfile \
-            --context=$PWD \
+            --context=$PWD/frontend \
             --destination=$DOCKERHUB/frontend:$IMAGE_TAG \
             --skip-tls-verify
           '''
