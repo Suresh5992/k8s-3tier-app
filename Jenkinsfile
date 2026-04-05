@@ -9,11 +9,6 @@ spec:
 
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
-    command:
-      - /busybox/sh
-      - -c
-    args:
-      - sleep 999999
     tty: true
     volumeMounts:
     - name: docker-config
@@ -45,13 +40,13 @@ spec:
 
   stages {
 
-    stage('Clone') {
+    stage('Clone Code') {
       steps {
         git branch: 'main', url: 'https://github.com/Suresh5992/k8s-3tier-app.git'
       }
     }
 
-    stage('Build Backend') {
+    stage('Build Backend Image') {
       steps {
         container('kaniko') {
           sh '''
@@ -65,7 +60,7 @@ spec:
       }
     }
 
-    stage('Build Frontend') {
+    stage('Build Frontend Image') {
       steps {
         container('kaniko') {
           sh '''
@@ -79,13 +74,15 @@ spec:
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy to Kubernetes') {
       steps {
         container('kubectl') {
           sh '''
-          kubectl apply -f manifestfiles/
           kubectl set image deployment/backend backend=$DOCKERHUB/backend:$IMAGE_TAG
           kubectl set image deployment/frontend frontend=$DOCKERHUB/frontend:$IMAGE_TAG
+
+          kubectl rollout status deployment/backend
+          kubectl rollout status deployment/frontend
           '''
         }
       }
