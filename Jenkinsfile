@@ -6,17 +6,18 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-   - name: kaniko
-  image: gcr.io/kaniko-project/executor:latest
-  command:
-    - /busybox/sh
-    - -c
-  args:
-    - sleep 999999
-  tty: true
-  volumeMounts:
-  - name: docker-config
-    mountPath: /kaniko/.docker
+
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command:
+      - /busybox/sh
+      - -c
+    args:
+      - sleep 999999
+    tty: true
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
 
   - name: kubectl
     image: bitnami/kubectl:latest
@@ -44,13 +45,13 @@ spec:
 
   stages {
 
-    stage('Clone Code') {
+    stage('Clone') {
       steps {
         git branch: 'main', url: 'https://github.com/Suresh5992/k8s-3tier-app.git'
       }
     }
 
-    stage('Build Backend Image') {
+    stage('Build Backend') {
       steps {
         container('kaniko') {
           sh '''
@@ -58,14 +59,13 @@ spec:
             --dockerfile=backend/Dockerfile \
             --context=$PWD \
             --destination=$DOCKERHUB/backend:$IMAGE_TAG \
-            --skip-tls-verify \
-            --verbosity=info
+            --skip-tls-verify
           '''
         }
       }
     }
 
-    stage('Build Frontend Image') {
+    stage('Build Frontend') {
       steps {
         container('kaniko') {
           sh '''
@@ -73,27 +73,19 @@ spec:
             --dockerfile=frontend/Dockerfile \
             --context=$PWD \
             --destination=$DOCKERHUB/frontend:$IMAGE_TAG \
-            --skip-tls-verify \
-            --verbosity=info
+            --skip-tls-verify
           '''
         }
       }
     }
 
-    stage('Deploy to Kubernetes') {
+    stage('Deploy') {
       steps {
         container('kubectl') {
           sh '''
-          echo "Applying manifests..."
           kubectl apply -f manifestfiles/
-
-          echo "Updating images..."
           kubectl set image deployment/backend backend=$DOCKERHUB/backend:$IMAGE_TAG
           kubectl set image deployment/frontend frontend=$DOCKERHUB/frontend:$IMAGE_TAG
-
-          echo "Checking rollout status..."
-          kubectl rollout status deployment/backend
-          kubectl rollout status deployment/frontend
           '''
         }
       }
