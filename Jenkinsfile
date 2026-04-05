@@ -9,9 +9,10 @@ spec:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
     command:
-    - sleep
+    - /busybox/sh
     args:
-    - "9999999"
+    - -c
+    - -cat 
     tty: true
     volumeMounts:
     - name: docker-config
@@ -20,10 +21,10 @@ spec:
   - name: kubectl
     image: bitnami/kubectl:latest
     command:
-    - sleep
+    - /busybox/sh
     args:
-    - "9999999"
-    tty: true
+    - -c
+    - cat
 
   volumes:
   - name: docker-config
