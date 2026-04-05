@@ -7,12 +7,7 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command:
-    - /busybox/sh
-    args:
-    - -c
-    - -cat 
+    image: gcr.io/kaniko-project/executor:latest 
     tty: true
     volumeMounts:
     - name: docker-config
@@ -20,11 +15,7 @@ spec:
 
   - name: kubectl
     image: bitnami/kubectl:latest
-    command:
-    - /busybox/sh
-    args:
-    - -c
-    - cat
+    tty: true
 
   volumes:
   - name: docker-config
