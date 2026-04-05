@@ -6,15 +6,17 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    args:
-      - sleep
-      - "999999"
-    tty: true
-    volumeMounts:
-    - name: docker-config
-      mountPath: /kaniko/.docker
+   - name: kaniko
+  image: gcr.io/kaniko-project/executor:latest
+  command:
+    - /busybox/sh
+    - -c
+  args:
+    - sleep 999999
+  tty: true
+  volumeMounts:
+  - name: docker-config
+    mountPath: /kaniko/.docker
 
   - name: kubectl
     image: bitnami/kubectl:latest
