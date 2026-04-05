@@ -7,7 +7,9 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest 
+    image: gcr.io/kaniko-project/executor:latest
+    command:
+      - cat
     tty: true
     volumeMounts:
     - name: docker-config
@@ -15,6 +17,8 @@ spec:
 
   - name: kubectl
     image: bitnami/kubectl:latest
+    command:
+      - cat
     tty: true
 
   volumes:
@@ -37,44 +41,56 @@ spec:
 
   stages {
 
-    stage('Clone') {
+    stage('Clone Code') {
       steps {
         git branch: 'main', url: 'https://github.com/Suresh5992/k8s-3tier-app.git'
       }
     }
 
-    stage('Build Backend') {
+    stage('Build Backend Image') {
       steps {
         container('kaniko') {
           sh '''
           /kaniko/executor \
             --dockerfile=backend/Dockerfile \
-            --context=dir://$PWD/backend \
-            --destination=$DOCKERHUB/backend:$IMAGE_TAG
+            --context=$PWD \
+            --destination=$DOCKERHUB/backend:$IMAGE_TAG \
+            --skip-tls-verify \
+            --verbosity=info
           '''
         }
       }
     }
 
-    stage('Build Frontend') {
+    stage('Build Frontend Image') {
       steps {
         container('kaniko') {
           sh '''
           /kaniko/executor \
             --dockerfile=frontend/Dockerfile \
-            --context=dir://$PWD/frontend \
-            --destination=$DOCKERHUB/frontend:$IMAGE_TAG
+            --context=$PWD \
+            --destination=$DOCKERHUB/frontend:$IMAGE_TAG \
+            --skip-tls-verify \
+            --verbosity=info
           '''
         }
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy to Kubernetes') {
       steps {
         container('kubectl') {
           sh '''
+          echo "Applying manifests..."
+          kubectl apply -f manifestfiles/
+
+          echo "Updating images..."
           kubectl set image deployment/backend backend=$DOCKERHUB/backend:$IMAGE_TAG
           kubectl set image deployment/frontend frontend=$DOCKERHUB/frontend:$IMAGE_TAG
+
+          echo "Checking rollout status..."
+          kubectl rollout status deployment/backend
+          kubectl rollout status deployment/frontend
           '''
         }
       }
