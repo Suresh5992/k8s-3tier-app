@@ -46,7 +46,7 @@ spec:
           sh '''
           /kaniko/executor \
             --dockerfile=backend/Dockerfile \
-            --context=dir://backend \
+            --context=dir://$PWD/backend \
             --destination=$DOCKERHUB/backend:$IMAGE_TAG
           '''
         }
@@ -59,7 +59,7 @@ spec:
           sh '''
           /kaniko/executor \
             --dockerfile=frontend/Dockerfile \
-            --context=dir://frontend \
+            --context=dir://$PWD/frontend \
             --destination=$DOCKERHUB/frontend:$IMAGE_TAG
           '''
         }
